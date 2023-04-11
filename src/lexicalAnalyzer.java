@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.util.Scanner;
 
 public class lexicalAnalyzer {
-	// global variables to trace chars and tokens
 	
 	public static void main(String[] args) throws IOException {
 		
@@ -29,14 +28,17 @@ public class lexicalAnalyzer {
 		// read char by char. Reads characters from another Reader
 		BufferedReader readChar = new BufferedReader(fileReader);
 		
+		// to trace lexemes
 		int lineNo = 1;
 		int columnNo = 1;
 		String token = "";
+		String tempIdToken = "";
+		
 		int ascii = 0;
 		// -1 means end of character stream
 		while (ascii != -1) {
 			ascii = readChar.read();
-			// ascii 10 is new line character
+			// ASCII 10 is new line character
 			if (ascii == 10) {
 				lineNo++;
 				columnNo = 1;
@@ -44,17 +46,14 @@ public class lexicalAnalyzer {
 			}
 			// cast to char
 			char ch = (char) ascii;
+
 			// if char is a keyword like "define", "let", "cond", "if", "begin"
-			if (isComment(ch)) {
-				while (ascii != 10) {
-					ascii = readChar.read();
-				}
-				lineNo++;
-				columnNo = 1;
-				continue;
-			}
 			if (isLowerCaseCharacter(ch)) {
 				token += ch;
+				// temporary initialising identifier's string
+			} else if(isLowerCaseCharacter(ch) || isDecDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
+					ch == '<' || ch == '=' || ch == '>' || ch == '?' || ch == '.' || ch == '+' || ch == '-') {
+				tempIdToken += ch;
 			} else if (isBracket(ch)) {
 				// if char is a left bracket
 				if (ch == '(') {
@@ -71,6 +70,7 @@ public class lexicalAnalyzer {
 					token = toString("RIGHTCURLYB", lineNo, columnNo);
 				}
 			} else if (isKeyword(token)) {
+				tempIdToken = "";
 				if (token.equals("define")) {
 					token = toString("DEFINE", lineNo, columnNo - token.length());
 				} else if (token.equals("let")) {
@@ -81,9 +81,9 @@ public class lexicalAnalyzer {
 					token = toString("IF", lineNo, columnNo - token.length());
 				} else if (token.equals("begin")) {
 					token = toString("BEGIN", lineNo, columnNo - token.length());
-				} else if (token.equals("true") || token.equals("false")) {
-					token = toString("BOOLEAN", lineNo, columnNo - token.length());
 				}
+			} else if (isIdentifier(tempIdToken)) {
+				tempIdToken = toString(tempIdToken, lineNo, columnNo - tempIdToken.length());
 			} else {
 				token = toString("LEXICAL ERROR", lineNo, columnNo);
 			}
@@ -108,26 +108,13 @@ public class lexicalAnalyzer {
 		return false;
 	}
 
-	public static boolean isLowerCaseCharacter(char c) {
-		if (Character.isLowerCase(c)) {
-			return true;
-		}
-		return false;
-	}
+	// public static boolean isBoolean(String s) {
 
-	public static boolean isComment(char c) {
-		if (c == '~') {
-			return true;
-		}
-		return false;
-	}
+	// }
 
-	public static boolean isString(String s) {
-		if (s.startsWith("\"") && s.endsWith("\"")) {
-			return true;
-		}
-		return false;
-	}
+	// public static boolean isString(String s) {
+
+	// }
 
 	public static boolean isKeyword(String s) {
 		if (s.equals("define") || s.equals("let") || s.equals("cond") || s.equals("if") || s.equals("begin")) {
@@ -136,9 +123,38 @@ public class lexicalAnalyzer {
 		return false;
 	}
 
-	// public static boolean isIdentifier(String s) {
-
-	// }
+	public static boolean isIdentifier(String s) {
+		if (isKeyword(s) == false) {
+			if (isLowerCaseCharacter(s.charAt(0)) || s.charAt(0) == '!' || s.charAt(0) == '*' || s.charAt(0) == '/' || s.charAt(0) == ':' ||
+					s.charAt(0) == '<' || s.charAt(0) == '=' || s.charAt(0) == '>' || s.charAt(0) == '?') {
+				for (int i = 1; i < s.length(); i++) {
+					if (isLowerCaseCharacter(s.charAt(i)) == false || isDecDigit(s.charAt(i)) == false || s.charAt(i) != '.' || 
+							s.charAt(i) != '+' || s.charAt(i) != '-') {
+						return false;
+					}
+				}
+				return true;
+			}
+			else
+				return false;
+		}
+		else
+			return false; 
+	}
+	
+	public static boolean isLowerCaseCharacter(char c) {
+		if (Character.isLowerCase(c)) {
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isDecDigit(char c) {
+		if (Character.isDigit(c)) {
+			return true;
+		}
+		return false;
+	}
 
 	public static String toString(String token, int lineNo, int columnNo) {
 		System.out.println(token + " " + lineNo + ":" + columnNo);
