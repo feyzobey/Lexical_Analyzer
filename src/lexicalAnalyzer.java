@@ -16,25 +16,26 @@ import java.util.Scanner;
 
 public class lexicalAnalyzer {
 	// global variables to trace chars and tokens
-	static int lineNo = 1;
-	static int columnNo = 1;
-	static String token = "";
-
+	
 	public static void main(String[] args) throws IOException {
-
+		
 		System.out.println("Enter the name of the input file: ");
 		Scanner scanFileName = new Scanner(System.in);
 		String input = scanFileName.nextLine();
 		scanFileName.close();
-
+		
 		File inputFile = new File(input);
 		FileReader fileReader = new FileReader(inputFile);
 		// read char by char. Reads characters from another Reader
 		BufferedReader readChar = new BufferedReader(fileReader);
+		
+		int lineNo = 1;
+		int columnNo = 1;
+		String token = "";
 		int ascii = 0;
-		ascii = readChar.read();
 		// -1 means end of character stream
 		while (ascii != -1) {
+			ascii = readChar.read();
 			// ascii 10 is new line character
 			if (ascii == 10) {
 				lineNo++;
@@ -43,28 +44,41 @@ public class lexicalAnalyzer {
 			}
 			// cast to char
 			char ch = (char) ascii;
-			// if char is a bracket
-			if (isBracket(ch)) {
+			// if char is a keyword like "define", "let", "cond", "if", "begin"
+			if (isLowerCaseCharacter(ch)) {
+				token += ch;
+			} else if (isBracket(ch)) {
 				// if char is a left bracket
 				if (ch == '(') {
-					token = "LEFTPAR";
+					token = toString("LEFTPAR", lineNo, columnNo);
 				} else if (ch == ')') {
-					token = "RIGHTPAR";
+					token = toString("RIGHTPAR", lineNo, columnNo);
 				} else if (ch == '[') {
-					token = "LEFTSQUAREB";
+					token = toString("LEFTSQUAREB", lineNo, columnNo);
 				} else if (ch == ']') {
-					token = "RIGHTSQUAREB";
+					token = toString("RIGHTSQUAREB", lineNo, columnNo);
 				} else if (ch == '{') {
-					token = "LEFTCURLYB";
+					token = toString("LEFTCURLYB", lineNo, columnNo);
 				} else if (ch == '}') {
-					token = "RIGHTCURLYB";
+					token = toString("RIGHTCURLYB", lineNo, columnNo);
+				}
+			} else if (isKeyword(token)) {
+				if (token.equals("define")) {
+					token = toString("DEFINE", lineNo, columnNo - token.length());
+				} else if (token.equals("let")) {
+					token = toString("LET", lineNo, columnNo - token.length());
+				} else if (token.equals("cond")) {
+					token = toString("COND", lineNo, columnNo - token.length());
+				} else if (token.equals("if")) {
+					token = toString("IF", lineNo, columnNo - token.length());
+				} else if (token.equals("begin")) {
+					token = toString("BEGIN", lineNo, columnNo - token.length());
 				}
 			} else {
-				token = "LEXICAL ERROR";
+				token = toString("LEXICAL ERROR", lineNo, columnNo);
 			}
 			System.out.println(ch);
-			System.out.println(toString(token, lineNo, columnNo));
-			ascii = readChar.read();
+			columnNo++;
 		}
 		readChar.close();
 	}
@@ -88,23 +102,30 @@ public class lexicalAnalyzer {
 
 	// }
 
-	// public static boolean isCharacter(char c) {
-
-	// }
+	public static boolean isLowerCaseCharacter(char c) {
+		if (Character.isLowerCase(c)) {
+			return true;
+		}
+		return false;
+	}
 
 	// public static boolean isString(String s) {
 
 	// }
 
-	// public static boolean isKeyword(String s) {
-
-	// }
+	public static boolean isKeyword(String s) {
+		if (s.equals("define") || s.equals("let") || s.equals("cond") || s.equals("if") || s.equals("begin")) {
+			return true;
+		}
+		return false;
+	}
 
 	// public static boolean isIdentifier(String s) {
 
 	// }
 
 	public static String toString(String token, int lineNo, int columnNo) {
-		return token + " " + lineNo + ":" + columnNo;
+		System.out.println(token + " " + lineNo + ":" + columnNo);
+		return "";
 	}
 }
