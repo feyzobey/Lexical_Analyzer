@@ -140,6 +140,7 @@ public class lexicalAnalyzer {
 				for (int i = 1; i < s.length(); i++) {
 					if (isLowerCaseCharacter(s.charAt(i)) || isDecDigit(s.charAt(i)) || s.charAt(i) == '.' ||
 							s.charAt(i) == '+' || s.charAt(i) == '-') {
+						continue;
 					}
 					validChar = false;
 				}
