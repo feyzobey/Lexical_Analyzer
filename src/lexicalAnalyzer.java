@@ -55,11 +55,9 @@ public class lexicalAnalyzer {
 				lineNo++;
 				columnNo = 1;
 				continue;
-			}
-			// temporary initialising identifier's string
-			if (isLowerCaseCharacter(ch) || isDecDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
+				// temporary initialising identifier's string
+			} else if(isLowerCaseCharacter(ch) || isDecDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
 					ch == '<' || ch == '=' || ch == '>' || ch == '?' || ch == '.' || ch == '+' || ch == '-') {
-				token += ch;
 				tempIdToken += ch;
 			} else if (isBracket(ch)) {
 				// if char is a left bracket
