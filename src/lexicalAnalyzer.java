@@ -36,19 +36,19 @@ public class lexicalAnalyzer {
 
 		int ascii = 0;
 		// -1 means end of character stream
-		while (ascii != -1) {
+		while (true) {
 			ascii = readChar.read();
 			// ASCII 10 is new line character
+			if (ascii == -1) {
+				break;
+			}
 			if (ascii == 10) {
 				lineNo++;
 				columnNo = 1;
 				continue;
 			}
-			
-			// cast to char
-			char ch = (char) ascii;
-			// if char is a comment
-			if (isComment(ch)) {
+			// ascii 126 is tilde character (~)
+			if (ascii == 126) {
 				while (ascii != 10) {
 					ascii = readChar.read();
 				}
@@ -56,6 +56,8 @@ public class lexicalAnalyzer {
 				columnNo = 1;
 				continue;
 			}
+			// cast to char
+			char ch = (char) ascii;
 			// temporary initialising identifier's string
 			if (isLowerCaseCharacter(ch) || isDecDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
 					ch == '<' || ch == '=' || ch == '>' || ch == '?' || ch == '.' || ch == '+' || ch == '-') {
@@ -108,7 +110,8 @@ public class lexicalAnalyzer {
 				} else if (ch == '}') {
 					token = toString("RIGHTCURLYB", lineNo, columnNo);
 				}
-			} else if (ascii != 32) {
+			//ascii 13 is carriage return, ascii 32 is space
+			} else if (ascii != 32 && ascii != 13) {
 				token = toString("LEXICAL ERROR", lineNo, columnNo);
 			}
 			// System.out.println(ch);
@@ -149,13 +152,6 @@ public class lexicalAnalyzer {
 
 	public static boolean isLowerCaseCharacter(char c) {
 		if (Character.isLowerCase(c)) {
-			return true;
-		}
-		return false;
-	}
-
-	public static boolean isComment(char c) {
-		if (c == '~') {
 			return true;
 		}
 		return false;
