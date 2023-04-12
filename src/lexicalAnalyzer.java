@@ -59,10 +59,12 @@ public class lexicalAnalyzer {
 			// cast to char
 			char ch = (char) ascii;
 			// temporary initialising identifier's string
-			if (isLowerCaseCharacter(ch) || isDecDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
-					ch == '<' || ch == '=' || ch == '>' || ch == '?' || ch == '.' || ch == '+' || ch == '-') {
+			if ((isLowerCaseCharacter(ch) || isDecDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
+					ch == '<' || ch == '=' || ch == '>' || ch == '?' || ch == '.' || ch == '+' || ch == '-')) {
 				token += ch;
-				tempIdToken += ch;
+				if (!(tempIdToken.isEmpty() && (isDecDigit(ch) || ch == '.' || ch == '+' || ch == '-'))) {
+					tempIdToken += ch;
+				}
 			} else if (isKeyword(token)) {
 				tempIdToken = "";
 				if (token.equals("define")) {
