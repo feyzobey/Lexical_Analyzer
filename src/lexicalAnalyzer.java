@@ -47,7 +47,7 @@ public class lexicalAnalyzer {
 			// cast to char
 			char ch = (char) ascii;
 			// if char is a whitespace
-			if (ascii == 10) {
+			if (ascii == 32) {
 				columnNo++;
 				continue;
 			}
