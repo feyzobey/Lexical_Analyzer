@@ -61,21 +61,6 @@ public class lexicalAnalyzer {
 					ch == '<' || ch == '=' || ch == '>' || ch == '?' || ch == '.' || ch == '+' || ch == '-') {
 				token += ch;
 				tempIdToken += ch;
-			} else if (isBracket(ch)) {
-				// if char is a left bracket
-				if (ch == '(') {
-					token = toString("LEFTPAR", lineNo, columnNo);
-				} else if (ch == ')') {
-					token = toString("RIGHTPAR", lineNo, columnNo);
-				} else if (ch == '[') {
-					token = toString("LEFTSQUAREB", lineNo, columnNo);
-				} else if (ch == ']') {
-					token = toString("RIGHTSQUAREB", lineNo, columnNo);
-				} else if (ch == '{') {
-					token = toString("LEFTCURLYB", lineNo, columnNo);
-				} else if (ch == '}') {
-					token = toString("RIGHTCURLYB", lineNo, columnNo);
-				}
 			} else if (isKeyword(token)) {
 				tempIdToken = "";
 				if (token.equals("define")) {
@@ -92,7 +77,37 @@ public class lexicalAnalyzer {
 					token = toString("BOOLEAN", lineNo, columnNo - token.length());
 				}
 			} else if (isIdentifier(tempIdToken)) {
-				tempIdToken = toString(tempIdToken, lineNo, columnNo - tempIdToken.length());
+				tempIdToken = toString("IDENTIFIER", lineNo, columnNo - tempIdToken.length());
+				if (ch == '(') {
+					token = toString("LEFTPAR", lineNo, columnNo);
+				} else if (ch == ')') {
+					token = toString("RIGHTPAR", lineNo, columnNo);
+				} else if (ch == '[') {
+					token = toString("LEFTSQUAREB", lineNo, columnNo);
+				} else if (ch == ']') {
+					token = toString("RIGHTSQUAREB", lineNo, columnNo);
+				} else if (ch == '{') {
+					token = toString("LEFTCURLYB", lineNo, columnNo);
+				} else if (ch == '}') {
+					token = toString("RIGHTCURLYB", lineNo, columnNo);
+				}
+			} else if (isBracket(ch)) {
+				token = "";
+				tempIdToken = "";
+				// if char is a left bracket
+				if (ch == '(') {
+					token = toString("LEFTPAR", lineNo, columnNo);
+				} else if (ch == ')') {
+					token = toString("RIGHTPAR", lineNo, columnNo);
+				} else if (ch == '[') {
+					token = toString("LEFTSQUAREB", lineNo, columnNo);
+				} else if (ch == ']') {
+					token = toString("RIGHTSQUAREB", lineNo, columnNo);
+				} else if (ch == '{') {
+					token = toString("LEFTCURLYB", lineNo, columnNo);
+				} else if (ch == '}') {
+					token = toString("RIGHTCURLYB", lineNo, columnNo);
+				}
 			} else {
 				token = toString("LEXICAL ERROR", lineNo, columnNo);
 			}
@@ -127,7 +142,6 @@ public class lexicalAnalyzer {
 				for (int i = 1; i < s.length(); i++) {
 					if (isLowerCaseCharacter(s.charAt(i)) || isDecDigit(s.charAt(i)) || s.charAt(i) == '.' || 
 							s.charAt(i) == '+' || s.charAt(i) == '-') {
-						continue;
 					}
 					else
 						validChar = false;
