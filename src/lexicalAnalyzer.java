@@ -3,9 +3,9 @@
  * MOHAMAD NAEL AYOUBI   150120997
  * KADIR BAT             150120012
  * 
- *    CSE2260 Principles of Programming Languages - Project 1
- *    Lexical Analyser (Scanner)
- *    Scanning (DFA) as a set of nested case is our technique.
+ * CSE2260 Principles of Programming Languages - Project 1
+ * Lexical Analyser (Scanner)
+ * Scanning (DFA) as a set of nested case is our technique.
  */
 
 import java.io.BufferedReader;
@@ -15,25 +15,25 @@ import java.io.IOException;
 import java.util.Scanner;
 
 public class lexicalAnalyzer {
-	
+
 	public static void main(String[] args) throws IOException {
-		
+
 		System.out.println("Enter the name of the input file: ");
 		Scanner scanFileName = new Scanner(System.in);
 		String input = scanFileName.nextLine();
 		scanFileName.close();
-		
+
 		File inputFile = new File(input);
 		FileReader fileReader = new FileReader(inputFile);
 		// read char by char. Reads characters from another Reader
 		BufferedReader readChar = new BufferedReader(fileReader);
-		
+
 		// to trace lexemes
 		int lineNo = 1;
 		int columnNo = 1;
 		String token = "";
 		String tempIdToken = "";
-		
+
 		int ascii = 0;
 		// -1 means end of character stream
 		while (ascii != -1) {
@@ -55,9 +55,11 @@ public class lexicalAnalyzer {
 				lineNo++;
 				columnNo = 1;
 				continue;
-				// temporary initialising identifier's string
-			} else if(isLowerCaseCharacter(ch) || isDecDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
+			}
+			// temporary initialising identifier's string
+			if (isLowerCaseCharacter(ch) || isDecDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
 					ch == '<' || ch == '=' || ch == '>' || ch == '?' || ch == '.' || ch == '+' || ch == '-') {
+				token += ch;
 				tempIdToken += ch;
 			} else if (isBracket(ch)) {
 				// if char is a left bracket
@@ -90,21 +92,14 @@ public class lexicalAnalyzer {
 					token = toString("BOOLEAN", lineNo, columnNo - token.length());
 				}
 			} else if (isIdentifier(tempIdToken)) {
-				tempIdToken = toString(tempIdToken, lineNo, columnNo - tempIdToken.length());
+				tempIdToken = toString("IDENTIFIER", lineNo, columnNo - tempIdToken.length());
 			} else {
 				token = toString("LEXICAL ERROR", lineNo, columnNo);
 			}
-			System.out.println(ch);
+			// System.out.println(ch);
 			columnNo++;
 		}
 		readChar.close();
-	}
-
-	public static boolean isNumber(char c) {
-		if (Character.isDigit(c)) {
-			return true;
-		}
-		return false;
 	}
 
 	public static boolean isBracket(char c) {
@@ -117,28 +112,26 @@ public class lexicalAnalyzer {
 
 	public static boolean isIdentifier(String s) {
 		boolean validChar = true;
-		if (isKeyword(s) == false && !s.isEmpty()) {
+		if (!isKeyword(s) && !s.isEmpty()) {
 			// check first rightmost BNF choice
-			if (isLowerCaseCharacter(s.charAt(0)) || s.charAt(0) == '!' || s.charAt(0) == '*' || s.charAt(0) == '/' || s.charAt(0) == ':' ||
+			if (isLowerCaseCharacter(s.charAt(0)) || s.charAt(0) == '!' || s.charAt(0) == '*' || s.charAt(0) == '/'
+					|| s.charAt(0) == ':' ||
 					s.charAt(0) == '<' || s.charAt(0) == '=' || s.charAt(0) == '>' || s.charAt(0) == '?') {
 				// second rightmost BNF choice
 				for (int i = 1; i < s.length(); i++) {
-					if (isLowerCaseCharacter(s.charAt(i)) || isDecDigit(s.charAt(i)) || s.charAt(i) == '.' || 
+					if (isLowerCaseCharacter(s.charAt(i)) || isDecDigit(s.charAt(i)) || s.charAt(i) == '.' ||
 							s.charAt(i) == '+' || s.charAt(i) == '-') {
 						continue;
 					}
-					else
-						validChar = false;
+					validChar = false;
 				}
 				return validChar;
-			}
-			else
-				return false;
-		}
-		else
-			return false; 
+			} 
+			return false;
+		} 
+		return false;
 	}
-	
+
 	public static boolean isLowerCaseCharacter(char c) {
 		if (Character.isLowerCase(c)) {
 			return true;
@@ -149,7 +142,7 @@ public class lexicalAnalyzer {
 	public static boolean isComment(char c) {
 		if (c == '~') {
 			return true;
-		} 
+		}
 		return false;
 	}
 
@@ -161,7 +154,8 @@ public class lexicalAnalyzer {
 	}
 
 	public static boolean isKeyword(String s) {
-		if (s.equals("define") || s.equals("let") || s.equals("cond") || s.equals("if") || s.equals("begin") || s.equals("true") || s.equals("false")) {
+		if (s.equals("define") || s.equals("let") || s.equals("cond") || s.equals("if") || s.equals("begin")
+				|| s.equals("true") || s.equals("false")) {
 			return true;
 		}
 		return false;
@@ -173,7 +167,6 @@ public class lexicalAnalyzer {
 		}
 		return false;
 	}
-
 
 	public static String toString(String token, int lineNo, int columnNo) {
 		System.out.println(token + " " + lineNo + ":" + columnNo);
