@@ -46,8 +46,12 @@ public class lexicalAnalyzer {
 			}
 			// cast to char
 			char ch = (char) ascii;
-
-			// if char is a keyword like "define", "let", "cond", "if", "begin"
+			// if char is a whitespace
+			if (ascii == 10) {
+				columnNo++;
+				continue;
+			}
+			// if char is a comment
 			if (isComment(ch)) {
 				while (ascii != 10) {
 					ascii = readChar.read();
