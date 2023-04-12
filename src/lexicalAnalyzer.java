@@ -55,9 +55,6 @@ public class lexicalAnalyzer {
 				lineNo++;
 				columnNo = 1;
 				continue;
-			}
-			if (isLowerCaseCharacter(ch)) {
-				token += ch;
 				// temporary initialising identifier's string
 			} else if(isLowerCaseCharacter(ch) || isDecDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
 					ch == '<' || ch == '=' || ch == '>' || ch == '?' || ch == '.' || ch == '+' || ch == '-') {
@@ -119,16 +116,21 @@ public class lexicalAnalyzer {
 	}
 
 	public static boolean isIdentifier(String s) {
-		if (isKeyword(s) == false) {
+		boolean validChar = true;
+		if (isKeyword(s) == false && !s.isEmpty()) {
+			// check first rightmost BNF choice
 			if (isLowerCaseCharacter(s.charAt(0)) || s.charAt(0) == '!' || s.charAt(0) == '*' || s.charAt(0) == '/' || s.charAt(0) == ':' ||
 					s.charAt(0) == '<' || s.charAt(0) == '=' || s.charAt(0) == '>' || s.charAt(0) == '?') {
+				// second rightmost BNF choice
 				for (int i = 1; i < s.length(); i++) {
-					if (isLowerCaseCharacter(s.charAt(i)) == false || isDecDigit(s.charAt(i)) == false || s.charAt(i) != '.' || 
-							s.charAt(i) != '+' || s.charAt(i) != '-') {
-						return false;
+					if (isLowerCaseCharacter(s.charAt(i)) || isDecDigit(s.charAt(i)) || s.charAt(i) == '.' || 
+							s.charAt(i) == '+' || s.charAt(i) == '-') {
+						continue;
 					}
+					else
+						validChar = false;
 				}
-				return true;
+				return validChar;
 			}
 			else
 				return false;
