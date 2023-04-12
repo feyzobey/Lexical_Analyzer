@@ -32,8 +32,6 @@ public class lexicalAnalyzer {
 		int lineNo = 1;
 		int columnNo = 1;
 		String token = "";
-		String tempIdToken = "";
-
 		int ascii = 0;
 		// -1 means end of character stream
 		while (true) {
@@ -58,60 +56,16 @@ public class lexicalAnalyzer {
 			}
 			// cast to char
 			char ch = (char) ascii;
+			token += ch;
 			// temporary initialising identifier's string
-			if (isLowerCaseCharacter(ch) || isDecDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
-					ch == '<' || ch == '=' || ch == '>' || ch == '?' || ch == '.' || ch == '+' || ch == '-') {
-				token += ch;
-				tempIdToken += ch;
-			} else if (isKeyword(token)) {
-				tempIdToken = "";
-				if (token.equals("define")) {
-					token = toString("DEFINE", lineNo, columnNo - token.length());
-				} else if (token.equals("let")) {
-					token = toString("LET", lineNo, columnNo - token.length());
-				} else if (token.equals("cond")) {
-					token = toString("COND", lineNo, columnNo - token.length());
-				} else if (token.equals("if")) {
-					token = toString("IF", lineNo, columnNo - token.length());
-				} else if (token.equals("begin")) {
-					token = toString("BEGIN", lineNo, columnNo - token.length());
-				} else if (token.equals("true") || token.equals("false")) {
-					token = toString("BOOLEAN", lineNo, columnNo - token.length());
-				}
-			} else if (isIdentifier(tempIdToken)) {
-				tempIdToken = toString("IDENTIFIER", lineNo, columnNo - tempIdToken.length());
-				if (ch == '(') {
-					token = toString("LEFTPAR", lineNo, columnNo);
-				} else if (ch == ')') {
-					token = toString("RIGHTPAR", lineNo, columnNo);
-				} else if (ch == '[') {
-					token = toString("LEFTSQUAREB", lineNo, columnNo);
-				} else if (ch == ']') {
-					token = toString("RIGHTSQUAREB", lineNo, columnNo);
-				} else if (ch == '{') {
-					token = toString("LEFTCURLYB", lineNo, columnNo);
-				} else if (ch == '}') {
-					token = toString("RIGHTCURLYB", lineNo, columnNo);
-				}
-			} else if (isBracket(ch)) {
+			if (bracket(ch, lineNo, columnNo)) {
 				token = "";
-				tempIdToken = "";
-				// if char is a left bracket
-				if (ch == '(') {
-					token = toString("LEFTPAR", lineNo, columnNo);
-				} else if (ch == ')') {
-					token = toString("RIGHTPAR", lineNo, columnNo);
-				} else if (ch == '[') {
-					token = toString("LEFTSQUAREB", lineNo, columnNo);
-				} else if (ch == ']') {
-					token = toString("RIGHTSQUAREB", lineNo, columnNo);
-				} else if (ch == '{') {
-					token = toString("LEFTCURLYB", lineNo, columnNo);
-				} else if (ch == '}') {
-					token = toString("RIGHTCURLYB", lineNo, columnNo);
-				}
-			//ascii 13 is carriage return, ascii 32 is space
+			} else if (identifier(token, lineNo, columnNo)) {
+				token = "";
+			} else if (keyword(token, lineNo, columnNo)) {
+				token = "";
 			} else if (ascii != 32 && ascii != 13) {
+				// ascii 13 is carriage return, ascii 32 is space
 				token = toString("LEXICAL ERROR", lineNo, columnNo);
 			}
 			// System.out.println(ch);
@@ -119,46 +73,73 @@ public class lexicalAnalyzer {
 		}
 		readChar.close();
 	}
+	
+	public static boolean bracket(char c, int lineNo, int columnNo) {
+		if (c == '(') {
+			toString("LEFTPAR", lineNo, columnNo);
+			return true;
+		}
+		if (c == ')') {
+			toString("RIGHTPAR", lineNo, columnNo);
+			return true;
+		}
+		if (c == '[') {
+			toString("LEFTSQUAREB", lineNo, columnNo);
+			return true;
+		}
+		if (c == ']') {
+			toString("RIGHTSQUAREB", lineNo, columnNo);
+			return true;
+		}
+		if (c == '{') {
+			toString("LEFTCURLYB", lineNo, columnNo);
+			return true;
+		}
+		if (c == '}') {
+			toString("RIGHTCURLYB", lineNo, columnNo);
+			return true;
+		}
+		return false;
+	}
+
+	public static boolean keyword(String s, int lineNo, int columnNo) {
+		if (s.equals("define")) {
+			toString("DEFINE", lineNo, columnNo);
+			return true;
+		}
+		if (s.equals("let")) {
+			toString("LET", lineNo, columnNo);
+			return true;
+		}
+		if (s.equals("cond")) {
+			toString("COND", lineNo, columnNo);
+			return true;
+		}
+		if (s.equals("if")) {
+			toString("IF", lineNo, columnNo);
+			return true;
+		}
+		if (s.equals("begin")) {
+			toString("BEGIN", lineNo, columnNo);
+			return true;
+		}
+		if (s.equals("true") || s.equals("false")) {
+			toString("BOOLEAN", lineNo, columnNo);
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean identifier(String s, int lineNo, int columnNo) {
+		if (isIdentifier(s)) {
+			toString("IDENTIFIER", lineNo, columnNo);
+			return true;
+		}
+		return false;
+	}
 
 	public static boolean isBracket(char c) {
-		Character ch = (Character) c;
-		if (ch.equals('(') || ch.equals(')') || ch.equals('[') || ch.equals(']') || ch.equals('{') || ch.equals('}')) {
-			return true;
-		}
-		return false;
-	}
-
-	public static boolean isIdentifier(String s) {
-		boolean validChar = true;
-		if (!isKeyword(s) && !s.isEmpty()) {
-			// check first rightmost BNF choice
-			if (isLowerCaseCharacter(s.charAt(0)) || s.charAt(0) == '!' || s.charAt(0) == '*' || s.charAt(0) == '/'
-					|| s.charAt(0) == ':' ||
-					s.charAt(0) == '<' || s.charAt(0) == '=' || s.charAt(0) == '>' || s.charAt(0) == '?') {
-				// second rightmost BNF choice
-				for (int i = 1; i < s.length(); i++) {
-					if (isLowerCaseCharacter(s.charAt(i)) || isDecDigit(s.charAt(i)) || s.charAt(i) == '.' ||
-							s.charAt(i) == '+' || s.charAt(i) == '-') {
-						continue;
-					}
-					validChar = false;
-				}
-				return validChar;
-			} 
-			return false;
-		} 
-		return false;
-	}
-
-	public static boolean isLowerCaseCharacter(char c) {
-		if (Character.isLowerCase(c)) {
-			return true;
-		}
-		return false;
-	}
-
-	public static boolean isString(String s) {
-		if (s.startsWith("\"") && s.endsWith("\"")) {
+		if (c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}') {
 			return true;
 		}
 		return false;
@@ -172,8 +153,56 @@ public class lexicalAnalyzer {
 		return false;
 	}
 
+	public static boolean isSpecialChar(char c) {
+		if (c == '!' || c == '*' || c == '/' || c == ':' ||
+			c == '<' || c == '=' || c == '>' || c == '?' ||
+			c == '.' || c == '+' || c == '-') {
+			return true;
+		}
+		return false;
+	}
+
 	public static boolean isDecDigit(char c) {
 		if (Character.isDigit(c)) {
+			return true;
+		}
+		return false;
+	}
+
+	public static boolean isIdentifier(String s) {
+		boolean validIdentifier = true;
+		if (s.isEmpty()) {
+			return false;
+		}
+		if (isKeyword(s)) {
+			return false;
+		}
+		// check first rightmost BNF choice
+		if (isLowerCaseCharacter(s.charAt(0)) || s.charAt(0) == '!' || s.charAt(0) == '*' || s.charAt(0) == '/'
+				|| s.charAt(0) == ':' ||
+				s.charAt(0) == '<' || s.charAt(0) == '=' || s.charAt(0) == '>' || s.charAt(0) == '?') {
+			// second rightmost BNF choice
+			for (int i = 1; i < s.length(); i++) {
+				if (isLowerCaseCharacter(s.charAt(i)) || isDecDigit(s.charAt(i)) || s.charAt(i) == '.' ||
+						s.charAt(i) == '+' || s.charAt(i) == '-') {
+					continue;
+				}
+				validIdentifier = false;
+			}
+			return validIdentifier;
+		}
+		return false;
+	}
+
+	public static boolean isLowerCaseCharacter(char c) {
+		if (Character.isLowerCase(c)) {
+			return true;
+		}
+		return false;
+	}
+
+	public static boolean isString(String s) {
+		if (s.startsWith("\"") && s.endsWith("\"")) {
 			return true;
 		}
 		return false;
