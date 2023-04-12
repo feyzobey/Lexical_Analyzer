@@ -44,13 +44,9 @@ public class lexicalAnalyzer {
 				columnNo = 1;
 				continue;
 			}
+			
 			// cast to char
 			char ch = (char) ascii;
-			// if char is a whitespace
-			if (ascii == 32) {
-				columnNo++;
-				continue;
-			}
 			// if char is a comment
 			if (isComment(ch)) {
 				while (ascii != 10) {
@@ -112,7 +108,7 @@ public class lexicalAnalyzer {
 				} else if (ch == '}') {
 					token = toString("RIGHTCURLYB", lineNo, columnNo);
 				}
-			} else {
+			} else if (ascii != 32) {
 				token = toString("LEXICAL ERROR", lineNo, columnNo);
 			}
 			// System.out.println(ch);
