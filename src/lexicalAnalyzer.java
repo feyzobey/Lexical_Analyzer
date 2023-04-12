@@ -48,11 +48,18 @@ public class lexicalAnalyzer {
 			char ch = (char) ascii;
 
 			// if char is a keyword like "define", "let", "cond", "if", "begin"
-			if (isLowerCaseCharacter(ch)) {
-				token += ch;
-				// temporary initialising identifier's string
-			} else if(isLowerCaseCharacter(ch) || isDecDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
+			if (isComment(ch)) {
+				while (ascii != 10) {
+					ascii = readChar.read();
+				}
+				lineNo++;
+				columnNo = 1;
+				continue;
+			}
+			// temporary initialising identifier's string
+			if (isLowerCaseCharacter(ch) || isDecDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
 					ch == '<' || ch == '=' || ch == '>' || ch == '?' || ch == '.' || ch == '+' || ch == '-') {
+				token += ch;
 				tempIdToken += ch;
 			} else if (isBracket(ch)) {
 				// if char is a left bracket
@@ -81,6 +88,8 @@ public class lexicalAnalyzer {
 					token = toString("IF", lineNo, columnNo - token.length());
 				} else if (token.equals("begin")) {
 					token = toString("BEGIN", lineNo, columnNo - token.length());
+				} else if (token.equals("true") || token.equals("false")) {
+					token = toString("BOOLEAN", lineNo, columnNo - token.length());
 				}
 			} else if (isIdentifier(tempIdToken)) {
 				tempIdToken = toString(tempIdToken, lineNo, columnNo - tempIdToken.length());
@@ -108,32 +117,22 @@ public class lexicalAnalyzer {
 		return false;
 	}
 
-	// public static boolean isBoolean(String s) {
-
-	// }
-
-	// public static boolean isString(String s) {
-
-	// }
-
-	public static boolean isKeyword(String s) {
-		if (s.equals("define") || s.equals("let") || s.equals("cond") || s.equals("if") || s.equals("begin")) {
-			return true;
-		}
-		return false;
-	}
-
 	public static boolean isIdentifier(String s) {
-		if (isKeyword(s) == false) {
+		boolean validChar = true;
+		if (isKeyword(s) == false && !s.isEmpty()) {
+			// check first rightmost BNF choice
 			if (isLowerCaseCharacter(s.charAt(0)) || s.charAt(0) == '!' || s.charAt(0) == '*' || s.charAt(0) == '/' || s.charAt(0) == ':' ||
 					s.charAt(0) == '<' || s.charAt(0) == '=' || s.charAt(0) == '>' || s.charAt(0) == '?') {
+				// second rightmost BNF choice
 				for (int i = 1; i < s.length(); i++) {
-					if (isLowerCaseCharacter(s.charAt(i)) == false || isDecDigit(s.charAt(i)) == false || s.charAt(i) != '.' || 
-							s.charAt(i) != '+' || s.charAt(i) != '-') {
-						return false;
+					if (isLowerCaseCharacter(s.charAt(i)) || isDecDigit(s.charAt(i)) || s.charAt(i) == '.' || 
+							s.charAt(i) == '+' || s.charAt(i) == '-') {
+						continue;
 					}
+					else
+						validChar = false;
 				}
-				return true;
+				return validChar;
 			}
 			else
 				return false;
@@ -148,13 +147,35 @@ public class lexicalAnalyzer {
 		}
 		return false;
 	}
-	
+
+	public static boolean isComment(char c) {
+		if (c == '~') {
+			return true;
+		} 
+		return false;
+	}
+
+	public static boolean isString(String s) {
+		if (s.startsWith("\"") && s.endsWith("\"")) {
+			return true;
+		}
+		return false;
+	}
+
+	public static boolean isKeyword(String s) {
+		if (s.equals("define") || s.equals("let") || s.equals("cond") || s.equals("if") || s.equals("begin") || s.equals("true") || s.equals("false")) {
+			return true;
+		}
+		return false;
+	}
+
 	public static boolean isDecDigit(char c) {
 		if (Character.isDigit(c)) {
 			return true;
 		}
 		return false;
 	}
+
 
 	public static String toString(String token, int lineNo, int columnNo) {
 		System.out.println(token + " " + lineNo + ":" + columnNo);
