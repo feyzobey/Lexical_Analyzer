@@ -112,7 +112,7 @@ public class lexicalAnalyzer {
 				} else if (ch == '}') {
 					token = toString("RIGHTCURLYB", lineNo, columnNo);
 				}
-			//ascii 13 is carriage return, ascii 32 is space
+				// ascii 13 is carriage return, ascii 32 is space
 			} else if (ascii != 32 && ascii != 13) {
 				token = toString("LEXICAL ERROR", lineNo, columnNo);
 			}
@@ -123,62 +123,56 @@ public class lexicalAnalyzer {
 	}
 
 	public static boolean isBracket(char c) {
-		Character ch = (Character) c;
-		if (ch.equals('(') || ch.equals(')') || ch.equals('[') || ch.equals(']') || ch.equals('{') || ch.equals('}')) {
-			return true;
-		}
-		return false;
+		return c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}';
 	}
 
 	public static boolean isIdentifier(String s) {
 		boolean validChar = true;
-		if (!isKeyword(s) && !s.isEmpty()) {
-			// check first rightmost BNF choice
-			if (isLowerCaseCharacter(s.charAt(0)) || s.charAt(0) == '!' || s.charAt(0) == '*' || s.charAt(0) == '/'
-					|| s.charAt(0) == ':' ||
-					s.charAt(0) == '<' || s.charAt(0) == '=' || s.charAt(0) == '>' || s.charAt(0) == '?') {
-				// second rightmost BNF choice
-				for (int i = 1; i < s.length(); i++) {
-					if (isLowerCaseCharacter(s.charAt(i)) || isDecDigit(s.charAt(i)) || s.charAt(i) == '.' ||
-							s.charAt(i) == '+' || s.charAt(i) == '-') {
-						continue;
-					}
-					validChar = false;
-				}
-				return validChar;
-			} 
+		if (isKeyword(s)) {
 			return false;
-		} 
+		}
+		if (s.isEmpty()) {
+			return false;
+		}
+		// check first rightmost BNF choice
+		if (isLowerCaseCharacter(s.charAt(0))
+				|| s.charAt(0) == '!'
+				|| s.charAt(0) == '*'
+				|| s.charAt(0) == '/'
+				|| s.charAt(0) == ':'
+				|| s.charAt(0) == '<'
+				|| s.charAt(0) == '='
+				|| s.charAt(0) == '>'
+				|| s.charAt(0) == '?') {
+			// second rightmost BNF choice
+			for (int i = 1; i < s.length(); i++) {
+				if (isLowerCaseCharacter(s.charAt(i)) || isDecDigit(s.charAt(i)) || s.charAt(i) == '.' ||
+						s.charAt(i) == '+' || s.charAt(i) == '-') {
+					continue;
+				}
+				validChar = false;
+			}
+			return validChar;
+		}
 		return false;
 	}
 
 	public static boolean isLowerCaseCharacter(char c) {
-		if (Character.isLowerCase(c)) {
-			return true;
-		}
-		return false;
+		return Character.isLowerCase(c);
 	}
 
 	public static boolean isString(String s) {
-		if (s.startsWith("\"") && s.endsWith("\"")) {
-			return true;
-		}
-		return false;
+		return s.startsWith("\"") && s.endsWith("\"");
 	}
 
 	public static boolean isKeyword(String s) {
-		if (s.equals("define") || s.equals("let") || s.equals("cond") || s.equals("if") || s.equals("begin")
-				|| s.equals("true") || s.equals("false")) {
-			return true;
-		}
-		return false;
+		return s.equals("define") || s.equals("let")
+				|| s.equals("cond") || s.equals("if") || s.equals("begin")
+				|| s.equals("true") || s.equals("false");
 	}
 
 	public static boolean isDecDigit(char c) {
-		if (Character.isDigit(c)) {
-			return true;
-		}
-		return false;
+		return Character.isDigit(c);
 	}
 
 	public static String toString(String token, int lineNo, int columnNo) {
