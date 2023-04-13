@@ -10,10 +10,9 @@
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Scanner;
+
 public class lexicalAnalyzer {
-	public static HashMap<String, String> keywords = new HashMap<String, String>();
 	public static void main(String[] args) throws IOException {
 
 		System.out.println("Enter the name of the input file: ");
@@ -21,34 +20,128 @@ public class lexicalAnalyzer {
 		String input = scanFileName.nextLine();
 		scanFileName.close();
 
-		int lineNo = 0;
-		int columnNo = 0;
+		int lineNo = 1;
+		int columnNo = 1;
 		String token = "";
-		// read line by line with scanner class
+		String temp = "";
+
 		Scanner scanner = new Scanner(new File(input));
 		while (scanner.hasNextLine()) {
 			String line = scanner.nextLine();
 			String[] splittedLine = line.split(" ");
-			if (isBracket(splittedLine[columnNo])) {
-				
+			for (int i = 0; i < splittedLine.length; i++) {
+				token = splittedLine[i];
+				if (isBracket(token)) {
+					token = bracket(token, lineNo, columnNo);
+					columnNo++;
+				}
+				temp = keyword(token, lineNo, columnNo);
+				if (!temp.equals(token)) {
+					columnNo += token.length();
+					token = temp;
+				}
+				if (isBracket(token)) {
+					token = bracket(token, lineNo, columnNo);
+					columnNo++;
+				}
+				temp = identifier(token, lineNo, columnNo);
+				if (!temp.equals(token)) {
+					columnNo += token.length();
+					token = temp;
+				}
+				if (isBracket(token)) {
+					token = bracket(token, lineNo, columnNo);
+					columnNo++;
+				}
+				columnNo++;
 			}
-				
-
-			System.out.println(line);
+			// System.out.println(line);
 			lineNo++;
+			columnNo = 1;
 		}
 	}
 
-	public static boolean isBracket(String s) {
-		return s.charAt(0) == '(' || s.charAt(0) == ')' || s.charAt(0) == '[' || s.charAt(0) == ']'
-				|| s.charAt(0) == '{' || s.charAt(0) == '}';
+	public static String keyword(String token, int lineNo, int columnNo) {
+		for (int i = token.length(); i > 0; i--) {
+			String temp = token.substring(0, i);
+			if (isKeyword(temp)) {
+				if (temp.equals("define")) {
+					toString("DEFINE", lineNo, columnNo);
+					return token.substring(i, token.length());
+				}
+				if (temp.equals("let")) {
+					toString("LET", lineNo, columnNo);
+					return token.substring(i, token.length());
+				}
+				if (temp.equals("cond")) {
+					toString("COND", lineNo, columnNo);
+					return token.substring(i, token.length());
+				}
+				if (temp.equals("if")) {
+					toString("IF", lineNo, columnNo);
+					return token.substring(i, token.length());
+				}
+				if (temp.equals("begin")) {
+					toString("BEGIN", lineNo, columnNo);
+					return token.substring(i, token.length());
+				}
+				if (temp.equals("true") || temp.equals("false")) {
+					toString("BOOLEAN", lineNo, columnNo);
+					return token.substring(i, token.length());
+				}
+			}	
+		}
+		return token;
+	}
+
+	public static String bracket(String token, int lineNo, int columnNo) {
+		if (token.isEmpty()) {
+			return token;
+		}
+		char ch = token.charAt(0);
+		if (ch == '(') {
+			toString("LEFTPAR", lineNo, columnNo);
+			return token.substring(1, token.length());
+		}
+		if (ch == ')') {
+			toString("RIGHTPAR", lineNo, columnNo);
+			return token.substring(1, token.length());
+		}
+		if (ch == '[') {
+			toString("LEFTSQUAREB", lineNo, columnNo);
+			return token.substring(1, token.length());
+		}
+		if (ch == ']') {
+			toString("RIGHTSQUAREB", lineNo, columnNo);
+			return token.substring(1, token.length());
+		}
+		if (ch == '{') {
+			toString("LEFTCURLYB", lineNo, columnNo);
+			return token.substring(1, token.length());
+		}
+		if (ch == '}') {
+			toString("RIGHTCURLYB", lineNo, columnNo);
+			return token.substring(1, token.length());
+		}
+		return token;
+	}
+
+	public static String identifier(String token, int lineNo, int columnNo) {
+		if (token.isEmpty()) {
+			return token;
+		}
+		for (int i = token.length(); i > 0; i--) {
+			String temp = token.substring(0, i);
+			if (isIdentifier(temp)) {
+				toString("IDENTIFIER", lineNo, columnNo);
+				return token.substring(i, token.length());
+			}
+		}
+		return token;
 	}
 
 	public static boolean isIdentifier(String s) {
 		boolean validChar = true;
-		if (isKeyword(s)) {
-			return false;
-		}
 		if (s.isEmpty()) {
 			return false;
 		}
@@ -83,7 +176,18 @@ public class lexicalAnalyzer {
 		return s.startsWith("\"") && s.endsWith("\"");
 	}
 
+	public static boolean isBracket(String s) {
+		if (s.isEmpty()) {
+			return false;
+		}
+		return s.charAt(0) == '(' || s.charAt(0) == ')' || s.charAt(0) == '[' || s.charAt(0) == ']'
+				|| s.charAt(0) == '{' || s.charAt(0) == '}';
+	}
+
 	public static boolean isKeyword(String s) {
+		if (s.isEmpty()) {
+			return false;
+		}
 		return s.equals("define") || s.equals("let")
 				|| s.equals("cond") || s.equals("if") || s.equals("begin")
 				|| s.equals("true") || s.equals("false");
@@ -93,8 +197,7 @@ public class lexicalAnalyzer {
 		return Character.isDigit(c);
 	}
 
-	public static String toString(String token, int lineNo, int columnNo) {
+	public static void toString(String token, int lineNo, int columnNo) {
 		System.out.println(token + " " + lineNo + ":" + columnNo);
-		return "";
 	}
 }
