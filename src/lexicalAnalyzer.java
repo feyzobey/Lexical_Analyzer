@@ -8,14 +8,12 @@
  * Scanning (DFA) as a set of nested case is our technique.
  */
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Scanner;
-
 public class lexicalAnalyzer {
-
+	public static HashMap<String, String> keywords = new HashMap<String, String>();
 	public static void main(String[] args) throws IOException {
 
 		System.out.println("Enter the name of the input file: ");
@@ -23,107 +21,27 @@ public class lexicalAnalyzer {
 		String input = scanFileName.nextLine();
 		scanFileName.close();
 
-		File inputFile = new File(input);
-		FileReader fileReader = new FileReader(inputFile);
-		// read char by char. Reads characters from another Reader
-		BufferedReader readChar = new BufferedReader(fileReader);
-
-		// to trace lexemes
-		int lineNo = 1;
-		int columnNo = 1;
+		int lineNo = 0;
+		int columnNo = 0;
 		String token = "";
-		String tempIdToken = "";
+		// read line by line with scanner class
+		Scanner scanner = new Scanner(new File(input));
+		while (scanner.hasNextLine()) {
+			String line = scanner.nextLine();
+			String[] splittedLine = line.split(" ");
+			if (isBracket(splittedLine[columnNo])) {
+				
+			}
+				
 
-		int ascii = 0;
-		// -1 means end of character stream
-		while (true) {
-			ascii = readChar.read();
-			// ASCII 10 is new line character
-			if (ascii == -1) {
-				break;
-			}
-			if (ascii == 10) {
-				lineNo++;
-				columnNo = 1;
-				continue;
-			}
-			// ascii 126 is tilde character (~)
-			if (ascii == 126) {
-				while (ascii != 10) {
-					ascii = readChar.read();
-				}
-				lineNo++;
-				columnNo = 1;
-				continue;
-			}
-			// cast to char
-			char ch = (char) ascii;
-			// temporary initialising identifier's string
-			if ((isLowerCaseCharacter(ch) || isDecDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
-					ch == '<' || ch == '=' || ch == '>' || ch == '?' || ch == '.' || ch == '+' || ch == '-')) {
-				token += ch;
-				if (!(tempIdToken.isEmpty() && (isDecDigit(ch) || ch == '.' || ch == '+' || ch == '-'))) {
-					tempIdToken += ch;
-				}
-			} else if (isKeyword(token)) {
-				tempIdToken = "";
-				if (token.equals("define")) {
-					token = toString("DEFINE", lineNo, columnNo - token.length());
-				} else if (token.equals("let")) {
-					token = toString("LET", lineNo, columnNo - token.length());
-				} else if (token.equals("cond")) {
-					token = toString("COND", lineNo, columnNo - token.length());
-				} else if (token.equals("if")) {
-					token = toString("IF", lineNo, columnNo - token.length());
-				} else if (token.equals("begin")) {
-					token = toString("BEGIN", lineNo, columnNo - token.length());
-				} else if (token.equals("true") || token.equals("false")) {
-					token = toString("BOOLEAN", lineNo, columnNo - token.length());
-				}
-			} else if (isIdentifier(tempIdToken)) {
-				tempIdToken = toString("IDENTIFIER", lineNo, columnNo - tempIdToken.length());
-				if (ch == '(') {
-					token = toString("LEFTPAR", lineNo, columnNo);
-				} else if (ch == ')') {
-					token = toString("RIGHTPAR", lineNo, columnNo);
-				} else if (ch == '[') {
-					token = toString("LEFTSQUAREB", lineNo, columnNo);
-				} else if (ch == ']') {
-					token = toString("RIGHTSQUAREB", lineNo, columnNo);
-				} else if (ch == '{') {
-					token = toString("LEFTCURLYB", lineNo, columnNo);
-				} else if (ch == '}') {
-					token = toString("RIGHTCURLYB", lineNo, columnNo);
-				}
-			} else if (isBracket(ch)) {
-				token = "";
-				tempIdToken = "";
-				// if char is a left bracket
-				if (ch == '(') {
-					token = toString("LEFTPAR", lineNo, columnNo);
-				} else if (ch == ')') {
-					token = toString("RIGHTPAR", lineNo, columnNo);
-				} else if (ch == '[') {
-					token = toString("LEFTSQUAREB", lineNo, columnNo);
-				} else if (ch == ']') {
-					token = toString("RIGHTSQUAREB", lineNo, columnNo);
-				} else if (ch == '{') {
-					token = toString("LEFTCURLYB", lineNo, columnNo);
-				} else if (ch == '}') {
-					token = toString("RIGHTCURLYB", lineNo, columnNo);
-				}
-				// ascii 13 is carriage return, ascii 32 is space
-			} else if (ascii != 32 && ascii != 13) {
-				token = toString("LEXICAL ERROR", lineNo, columnNo);
-			}
-			// System.out.println(ch);
-			columnNo++;
+			System.out.println(line);
+			lineNo++;
 		}
-		readChar.close();
 	}
 
-	public static boolean isBracket(char c) {
-		return c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}';
+	public static boolean isBracket(String s) {
+		return s.charAt(0) == '(' || s.charAt(0) == ')' || s.charAt(0) == '[' || s.charAt(0) == ']'
+				|| s.charAt(0) == '{' || s.charAt(0) == '}';
 	}
 
 	public static boolean isIdentifier(String s) {
