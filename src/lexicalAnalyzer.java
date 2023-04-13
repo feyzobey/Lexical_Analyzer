@@ -24,20 +24,33 @@ public class lexicalAnalyzer {
 		int columnNo = 1;
 		String token = "";
 		String temp = "";
-
+		
 		Scanner scanner = new Scanner(new File(input));
 		while (scanner.hasNextLine()) {
 			String line = scanner.nextLine();
 			String[] splittedLine = line.split(" ");
-			for (int i = 0; i < splittedLine.length; i++) {
+			int commnetIndex = splittedLine.length;
+			for (int i = 0; i < commnetIndex; i++) {
 				token = splittedLine[i];
+				if (token.equals("")) {
+					columnNo++;
+					continue;
+				}
+				commnetIndex = comment(token);
+				if (commnetIndex != -1) {
+					token = token.substring(0, commnetIndex);
+				}
 				if (isBracket(token)) {
 					token = bracket(token, lineNo, columnNo);
 					columnNo++;
 				}
 				temp = keyword(token, lineNo, columnNo);
 				if (!temp.equals(token)) {
-					columnNo += token.length();
+					if(token.length() - temp.length() > 1){
+						columnNo += token.length() - temp.length();
+					}else{
+						columnNo ++;
+					}
 					token = temp;
 				}
 				if (isBracket(token)) {
@@ -46,7 +59,24 @@ public class lexicalAnalyzer {
 				}
 				temp = identifier(token, lineNo, columnNo);
 				if (!temp.equals(token)) {
-					columnNo += token.length();
+					if(token.length() - temp.length() > 1){
+						columnNo += token.length() - temp.length();
+					}else{
+						columnNo ++;
+					}
+					token = temp;
+				}
+				if (isBracket(token)) {
+					token = bracket(token, lineNo, columnNo);
+					columnNo++;
+				}
+				temp = number(token, lineNo, columnNo);
+				if (!temp.equals(token)) {
+					if(token.length() - temp.length() > 1){
+						columnNo += token.length() - temp.length();
+					}else{
+						columnNo ++;
+					}
 					token = temp;
 				}
 				if (isBracket(token)) {
@@ -55,10 +85,41 @@ public class lexicalAnalyzer {
 				}
 				columnNo++;
 			}
-			// System.out.println(line);
 			lineNo++;
 			columnNo = 1;
 		}
+	}
+
+	public static int comment(String token) {
+		return token.indexOf('~');
+	}
+
+	public static String string(String token, int lineNo, int columnNo) {
+		if (token.isEmpty()) {
+			return token;
+		}
+		for (int i = token.length(); i > 0; i--) {
+			String temp = token.substring(0, i);
+			if (isString(temp)) {
+				toString("STRING", lineNo, columnNo);
+				return token.substring(i, token.length());
+			}
+		}
+		return token;
+	}
+
+	public static String identifier(String token, int lineNo, int columnNo) {
+		if (token.isEmpty()) {
+			return token;
+		}
+		for (int i = token.length(); i > 0; i--) {
+			String temp = token.substring(0, i);
+			if (isIdentifier(temp)) {
+				toString("IDENTIFIER", lineNo, columnNo);
+				return token.substring(i, token.length());
+			}
+		}
+		return token;
 	}
 
 	public static String keyword(String token, int lineNo, int columnNo) {
@@ -89,7 +150,21 @@ public class lexicalAnalyzer {
 					toString("BOOLEAN", lineNo, columnNo);
 					return token.substring(i, token.length());
 				}
-			}	
+			}
+		}
+		return token;
+	}
+
+	public static String number(String token, int lineNo, int columnNo) {
+		if (token.isEmpty()) {
+			return token;
+		}
+		for (int i = token.length(); i > 0; i--) {
+			String temp = token.substring(0, i);
+			if (isNumber(temp)) {
+				toString("NUMBER", lineNo, columnNo);
+				return token.substring(i, token.length());
+			}
 		}
 		return token;
 	}
@@ -126,39 +201,24 @@ public class lexicalAnalyzer {
 		return token;
 	}
 
-	public static String identifier(String token, int lineNo, int columnNo) {
-		if (token.isEmpty()) {
-			return token;
+	public static boolean isBracket(String s) {
+		if (s.isEmpty()) {
+			return false;
 		}
-		for (int i = token.length(); i > 0; i--) {
-			String temp = token.substring(0, i);
-			if (isIdentifier(temp)) {
-				toString("IDENTIFIER", lineNo, columnNo);
-				return token.substring(i, token.length());
-			}
-		}
-		return token;
+		return s.charAt(0) == '(' || s.charAt(0) == ')' || s.charAt(0) == '[' || s.charAt(0) == ']'
+				|| s.charAt(0) == '{' || s.charAt(0) == '}';
 	}
 
-	public static boolean isIdentifier(String s) {
+	public static boolean isNumber(String s) {
 		boolean validChar = true;
 		if (s.isEmpty()) {
 			return false;
 		}
 		// check first rightmost BNF choice
-		if (isLowerCaseCharacter(s.charAt(0))
-				|| s.charAt(0) == '!'
-				|| s.charAt(0) == '*'
-				|| s.charAt(0) == '/'
-				|| s.charAt(0) == ':'
-				|| s.charAt(0) == '<'
-				|| s.charAt(0) == '='
-				|| s.charAt(0) == '>'
-				|| s.charAt(0) == '?') {
+		if (isDecDigit(s.charAt(0)) || s.charAt(0) == '+' || s.charAt(0) == '-') {
 			// second rightmost BNF choice
 			for (int i = 1; i < s.length(); i++) {
-				if (isLowerCaseCharacter(s.charAt(i)) || isDecDigit(s.charAt(i)) || s.charAt(i) == '.' ||
-						s.charAt(i) == '+' || s.charAt(i) == '-') {
+				if (isDecDigit(s.charAt(i)) || s.charAt(i) == '.') {
 					continue;
 				}
 				validChar = false;
@@ -168,20 +228,8 @@ public class lexicalAnalyzer {
 		return false;
 	}
 
-	public static boolean isLowerCaseCharacter(char c) {
-		return Character.isLowerCase(c);
-	}
-
-	public static boolean isString(String s) {
-		return s.startsWith("\"") && s.endsWith("\"");
-	}
-
-	public static boolean isBracket(String s) {
-		if (s.isEmpty()) {
-			return false;
-		}
-		return s.charAt(0) == '(' || s.charAt(0) == ')' || s.charAt(0) == '[' || s.charAt(0) == ']'
-				|| s.charAt(0) == '{' || s.charAt(0) == '}';
+	public static boolean isDecDigit(char c) {
+		return Character.isDigit(c);
 	}
 
 	public static boolean isKeyword(String s) {
@@ -193,8 +241,39 @@ public class lexicalAnalyzer {
 				|| s.equals("true") || s.equals("false");
 	}
 
-	public static boolean isDecDigit(char c) {
-		return Character.isDigit(c);
+	public static boolean isIdentifier(String s) {
+		boolean validChar = true;
+		if (s.isEmpty()) {
+			return false;
+		}
+		// check first rightmost BNF choice
+		if (Character.isLowerCase(s.charAt(0))
+				|| s.charAt(0) == '!'
+				|| s.charAt(0) == '*'
+				|| s.charAt(0) == '/'
+				|| s.charAt(0) == ':'
+				|| s.charAt(0) == '<'
+				|| s.charAt(0) == '='
+				|| s.charAt(0) == '>'
+				|| s.charAt(0) == '?'
+				|| s.charAt(0) == '+'
+				|| s.charAt(0) == '-'
+				|| s.charAt(0) == '.') {
+			// second rightmost BNF choice
+			for (int i = 1; i < s.length(); i++) {
+				if (Character.isLowerCase(s.charAt(i)) || isDecDigit(s.charAt(i)) || s.charAt(i) == '.' ||
+						s.charAt(i) == '+' || s.charAt(i) == '-') {
+					continue;
+				}
+				validChar = false;
+			}
+			return validChar;
+		}
+		return false;
+	}
+
+	public static boolean isString(String s) {
+		return s.startsWith("\"") && s.endsWith("\"");
 	}
 
 	public static void toString(String token, int lineNo, int columnNo) {
