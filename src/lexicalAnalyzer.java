@@ -33,6 +33,7 @@ public class lexicalAnalyzer {
 		int columnNo = 1;
 		String token = "";
 		String tempIdToken = "";
+		String tokenString = "";
 
 		int ascii = 0;
 		// -1 means end of character stream
@@ -47,7 +48,7 @@ public class lexicalAnalyzer {
 				columnNo = 1;
 				continue;
 			}
-			// ascii 126 is tilde character (~)
+			// ASCII 126 is tilde character (~) for comments
 			if (ascii == 126) {
 				while (ascii != 10) {
 					ascii = readChar.read();
@@ -58,8 +59,42 @@ public class lexicalAnalyzer {
 			}
 			// cast to char
 			char ch = (char) ascii;
+
+
+			// initialising String literal with the given expression
+			if (ch == '"') {
+				int strBegin = columnNo;
+				tokenString += ch;
+				while (ascii != 10 && ascii != -1) {
+					ascii = readChar.read();
+					ch = (char) ascii;
+					columnNo++;
+					tokenString += ch;
+
+					// end of String
+					if (ch == '"' && (tokenString.charAt(tokenString.length() - 2) != '\\')) {
+						//tokenString = toString(tokenString, lineNo, columnNo - tokenString.length() + 1);
+						if (isString(tokenString)) {
+							// is a valid string 
+							tokenString = toString("STRING", lineNo, columnNo - tokenString.length() + 1);
+							break;
+						}
+						else {
+							tokenString = toString("LEXICAL ERROR", lineNo, strBegin);
+							break;
+						}
+					}	
+					// end of line or stream and could find the last double quote
+					else if (ascii == 10 || ascii == -1) {
+						tokenString = toString("LEXICAL ERROR", lineNo, strBegin);
+						lineNo++;
+						columnNo = 0;
+					}
+				}
+			}
+
 			// temporary initialising identifier's string
-			if ((isLowerCaseCharacter(ch) || isDecDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
+			else if ((isLowerCaseCharacter(ch) || isDecDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
 					ch == '<' || ch == '=' || ch == '>' || ch == '?' || ch == '.' || ch == '+' || ch == '-')) {
 				token += ch;
 				if (!(tempIdToken.isEmpty() && (isDecDigit(ch) || ch == '.' || ch == '+' || ch == '-'))) {
@@ -81,7 +116,9 @@ public class lexicalAnalyzer {
 					token = toString("BOOLEAN", lineNo, columnNo - token.length());
 				}
 			} else if (isIdentifier(tempIdToken)) {
-				tempIdToken = toString("IDENTIFIER", lineNo, columnNo - tempIdToken.length());
+				if (!tempIdToken.isEmpty()) {
+					tempIdToken = toString("IDENTIFIER", lineNo, columnNo - tempIdToken.length());
+				}
 				if (ch == '(') {
 					token = toString("LEFTPAR", lineNo, columnNo);
 				} else if (ch == ')') {
@@ -112,7 +149,7 @@ public class lexicalAnalyzer {
 				} else if (ch == '}') {
 					token = toString("RIGHTCURLYB", lineNo, columnNo);
 				}
-			//ascii 13 is carriage return, ascii 32 is space
+				// ascii 13 is carriage return, ascii 32 is space
 			} else if (ascii != 32 && ascii != 13) {
 				token = toString("LEXICAL ERROR", lineNo, columnNo);
 			}
@@ -122,15 +159,30 @@ public class lexicalAnalyzer {
 		readChar.close();
 	}
 
-	public static boolean isBracket(char c) {
-		Character ch = (Character) c;
-		if (ch.equals('(') || ch.equals(')') || ch.equals('[') || ch.equals(']') || ch.equals('{') || ch.equals('}')) {
-			return true;
+	public static boolean isString(String s) {
+		for (int i = 1; i < s.length() - 1; i++) {
+	        char c = s.charAt(i);
+	        // if the character is a backslash, the next character must be either a quotation mark or backslash
+	        if (c == '\\') {
+	        	i++;
+	        	if (s.charAt(i) == '"') {
+	        		if (i == s.length() - 1)
+	        			return false;
+	        	}
+	        	else if (s.charAt(i) == '\\')
+	        		continue;
+	        	else
+	        		return false;
+	        }
 		}
-		return false;
+		return true;
 	}
 
-	public static boolean isIdentifier(String s) {
+    public static boolean isBracket(char c) {
+        return c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}';
+    }
+
+    public static boolean isIdentifier(String s) {
 		boolean validChar = true;
 		if (!isKeyword(s) && !s.isEmpty()) {
 			// check first rightmost BNF choice
@@ -152,37 +204,21 @@ public class lexicalAnalyzer {
 		return false;
 	}
 
-	public static boolean isLowerCaseCharacter(char c) {
-		if (Character.isLowerCase(c)) {
-			return true;
-		}
-		return false;
-	}
+    public static boolean isLowerCaseCharacter(char c) {
+        return Character.isLowerCase(c);
+    }
 
-	public static boolean isString(String s) {
-		if (s.startsWith("\"") && s.endsWith("\"")) {
-			return true;
-		}
-		return false;
-	}
+    public static boolean isKeyword(String s) {
+        return s.equals("define") || s.equals("let") || s.equals("cond") || s.equals("if") || s.equals("begin") ||
+            s.equals("true") || s.equals("false");
+    }
 
-	public static boolean isKeyword(String s) {
-		if (s.equals("define") || s.equals("let") || s.equals("cond") || s.equals("if") || s.equals("begin")
-				|| s.equals("true") || s.equals("false")) {
-			return true;
-		}
-		return false;
-	}
+    public static boolean isDecDigit(char c) {
+        return Character.isDigit(c);
+    }
 
-	public static boolean isDecDigit(char c) {
-		if (Character.isDigit(c)) {
-			return true;
-		}
-		return false;
-	}
-
-	public static String toString(String token, int lineNo, int columnNo) {
-		System.out.println(token + " " + lineNo + ":" + columnNo);
-		return "";
-	}
+    public static String toString(String token, int lineNo, int columnNo) {
+        System.out.println(token + " " + lineNo + ":" + columnNo);
+        return "";
+    }
 }
