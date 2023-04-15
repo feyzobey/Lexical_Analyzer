@@ -71,11 +71,14 @@ public class lexicalAnalyzer {
 				} else if (isIdentifier(tempIdToken)) {
 					tokenNumber = "";
 					if (!tempIdToken.isEmpty()) {
-						if (!isDecDigit(tempIdToken.charAt(0)))
 							tempIdToken = toString("IDENTIFIER", tempIdToken, lineNo, columnNo - tempIdToken.length(), write);
-						else 
-							tempIdToken = toString("LEXICAL ERROR", tempIdToken, lineNo, columnNo - tempIdToken.length(), write);
 					}
+				}
+				else if(!tokenNumber.isEmpty()) {
+					tokenNumber = toString("LEXICAL ERROR", tokenNumber, lineNo, columnNo - tokenNumber.length(), write);
+				}
+				else if(!tempIdToken.isEmpty()) {
+					tempIdToken = toString("LEXICAL ERROR", tempIdToken, lineNo, columnNo - tempIdToken.length(), write);
 				}
 				while (ascii != 10) {
 					ascii = readChar.read();
