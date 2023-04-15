@@ -65,50 +65,61 @@ public class lexicalAnalyzer {
 
 			// check for character literal
 			if (ch == '\'') {
+				tokenChar += ch;
 				// reading next char using nested if technique
 				int charBegin = columnNo;
 				ascii = readChar.read();
 				ch = (char) ascii;
 				columnNo++;
 				if (ch == '\\') {
+					tokenChar += ch;
 					ascii = readChar.read();
 					ch = (char) ascii;
 					columnNo++;
 					// double backslashes
 					if (ch == '\\') {
+						tokenChar += ch;
 						ascii = readChar.read();
 						ch = (char) ascii;
 						columnNo++;
 						if (ch != '\'') {
-							tokenChar = toString("LEXICAL ERROR", lineNo, columnNo);
+							tokenChar = toString("LEXICAL ERROR", tokenChar, lineNo, columnNo);
 						}
-						else 
-							tokenChar = toString("CHAR", lineNo, charBegin);
+						else {
+							tokenChar += ch;
+							tokenChar = toString("CHAR", tokenChar, lineNo, charBegin);
+						}
 					}
 					// single quote must be preceded by a backslash char
 					else if (ch == '\'') {
+						tokenChar += ch;
 						ascii = readChar.read();
 						ch = (char) ascii;
 						columnNo++;
 						if (ch != '\'') {
-							tokenChar = toString("LEXICAL ERROR", lineNo, columnNo);
+							tokenChar = toString("LEXICAL ERROR", tokenChar, lineNo, columnNo);
 						}
-						else 
-							tokenChar = toString("CHAR", lineNo, charBegin);
+						else {
+							tokenChar += ch;
+							tokenChar = toString("CHAR", tokenChar, lineNo, charBegin);
+						}
 					}
 				}
 				else if (ch != '\'' && ch != '\n') {
+					tokenChar += ch;
 					ascii = readChar.read();
 					ch = (char) ascii;
 					columnNo++;
 					if (ch != '\'' || ch == '\n') {
-						tokenChar = toString("LEXICAL ERROR", lineNo, columnNo);
+						tokenChar = toString("LEXICAL ERROR", tokenChar, lineNo, columnNo);
 					}
-					else 
-						tokenChar = toString("CHAR", lineNo, charBegin);
+					else {
+						tokenChar += ch;
+						tokenChar = toString("CHAR", tokenChar, lineNo, charBegin);
+					}
 				}
 				else {
-					tokenChar = toString("LEXICAL ERROR", lineNo, columnNo);
+					tokenChar = toString("LEXICAL ERROR", tokenChar, lineNo, columnNo);
 				}
 			}
 
@@ -128,17 +139,17 @@ public class lexicalAnalyzer {
 						// check if it is a valid String or not
 						if (isString(tokenString)) {
 							// is a valid string 
-							tokenString = toString("STRING", lineNo, columnNo - tokenString.length() + 1);
+							tokenString = toString("STRING", tokenString, lineNo, columnNo - tokenString.length() + 1);
 							break;
 						}
 						else {
-							tokenString = toString("LEXICAL ERROR", lineNo, strBegin);
+							tokenString = toString("LEXICAL ERROR", tokenString, lineNo, strBegin);
 							break;
 						}
 					}	
 					// end of line or stream and could find the last double quote
 					else if (ascii == 10 || ascii == -1) {
-						tokenString = toString("LEXICAL ERROR", lineNo, strBegin);
+						tokenString = toString("LEXICAL ERROR", tokenString, lineNo, strBegin);
 						lineNo++;
 						columnNo = 0;
 					}
@@ -160,84 +171,48 @@ public class lexicalAnalyzer {
 				tokenNumber = "";
 				tokenString = "";
 				if (token.equals("define")) {
-					token = toString("DEFINE", lineNo, columnNo - token.length());
+					token = toString("DEFINE", token, lineNo, columnNo - token.length());
 				} else if (token.equals("let")) {
-					token = toString("LET", lineNo, columnNo - token.length());
+					token = toString("LET", token, lineNo, columnNo - token.length());
 				} else if (token.equals("cond")) {
-					token = toString("COND", lineNo, columnNo - token.length());
+					token = toString("COND", token, lineNo, columnNo - token.length());
 				} else if (token.equals("if")) {
-					token = toString("IF", lineNo, columnNo - token.length());
+					token = toString("IF", token, lineNo, columnNo - token.length());
 				} else if (token.equals("begin")) {
-					token = toString("BEGIN", lineNo, columnNo - token.length());
+					token = toString("BEGIN", token, lineNo, columnNo - token.length());
 				} else if (token.equals("true") || token.equals("false")) {
-					token = toString("BOOLEAN", lineNo, columnNo - token.length());
+					token = toString("BOOLEAN", token, lineNo, columnNo - token.length());
 				}
 			} else if(isNumber(tokenNumber)) {
 				tempIdToken = "";
 				tokenString = "";
 				if (!tokenNumber.isEmpty()) {
-					tokenNumber = toString("NUMBER", lineNo, columnNo - tokenNumber.length());
+					tokenNumber = toString("NUMBER", tokenNumber, lineNo, columnNo - tokenNumber.length());
 				}
 				// since this literal expression and brackets expression are in different if statements we might not print bracket after a number
-				if (ch == '(') {
-					token = toString("LEFTPAR", lineNo, columnNo);
-				} else if (ch == ')') {
-					token = toString("RIGHTPAR", lineNo, columnNo);
-				} else if (ch == '[') {
-					token = toString("LEFTSQUAREB", lineNo, columnNo);
-				} else if (ch == ']') {
-					token = toString("RIGHTSQUAREB", lineNo, columnNo);
-				} else if (ch == '{') {
-					token = toString("LEFTCURLYB", lineNo, columnNo);
-				} else if (ch == '}') {
-					token = toString("RIGHTCURLYB", lineNo, columnNo);
-				}
+				token = printBracket(ch, lineNo, columnNo);
 			} else if (isIdentifier(tempIdToken)) {
 				tokenNumber = "";
 				if (!tempIdToken.isEmpty()) {
-					tempIdToken = toString("IDENTIFIER", lineNo, columnNo - tempIdToken.length());
+					tempIdToken = toString("IDENTIFIER", tempIdToken, lineNo, columnNo - tempIdToken.length());
 				}
-				if (ch == '(') {
-					token = toString("LEFTPAR", lineNo, columnNo);
-				} else if (ch == ')') {
-					token = toString("RIGHTPAR", lineNo, columnNo);
-				} else if (ch == '[') {
-					token = toString("LEFTSQUAREB", lineNo, columnNo);
-				} else if (ch == ']') {
-					token = toString("RIGHTSQUAREB", lineNo, columnNo);
-				} else if (ch == '{') {
-					token = toString("LEFTCURLYB", lineNo, columnNo);
-				} else if (ch == '}') {
-					token = toString("RIGHTCURLYB", lineNo, columnNo);
-				}
+				token = printBracket(ch, lineNo, columnNo);
 			} else if (isBracket(ch)) {
 				token = "";
 				tempIdToken = "";
 				// if char is a left bracket
-				if (ch == '(') {
-					token = toString("LEFTPAR", lineNo, columnNo);
-				} else if (ch == ')') {
-					token = toString("RIGHTPAR", lineNo, columnNo);
-				} else if (ch == '[') {
-					token = toString("LEFTSQUAREB", lineNo, columnNo);
-				} else if (ch == ']') {
-					token = toString("RIGHTSQUAREB", lineNo, columnNo);
-				} else if (ch == '{') {
-					token = toString("LEFTCURLYB", lineNo, columnNo);
-				} else if (ch == '}') {
-					token = toString("RIGHTCURLYB", lineNo, columnNo);
-				}
+				token = printBracket(ch, lineNo, columnNo);
 			} else if(ch == ' ') {
 				if(!tokenNumber.isEmpty()) {
-					tokenNumber = toString("LEXICAL ERROR", lineNo, columnNo - tokenNumber.length());
+					tokenNumber = toString("LEXICAL ERROR", tokenNumber, lineNo, columnNo - tokenNumber.length());
 				}
 				else if(!tempIdToken.isEmpty()) {
-					tempIdToken = toString("LEXICAL ERROR", lineNo, columnNo - tempIdToken.length());
+					tempIdToken = toString("LEXICAL ERROR", tempIdToken, lineNo, columnNo - tempIdToken.length());
 				}
 				
 				// ascii 13 is carriage return, ascii 32 is space
 			} else if (ascii != 32 && ascii != 13) {
-				token = toString("LEXICAL ERROR", lineNo, columnNo);
+				token = toString("LEXICAL ERROR", "", lineNo, columnNo);
 			}
 			// System.out.println(ch);
 			columnNo++;
@@ -268,6 +243,23 @@ public class lexicalAnalyzer {
 		return c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}';
 	}
 
+	public static String printBracket(char ch, int lineNo, int columnNo) {
+		if (ch == '(') {
+			return toString("LEFTPAR", "(", lineNo, columnNo);
+		} else if (ch == ')') {
+			return toString("RIGHTPAR", ")", lineNo, columnNo);
+		} else if (ch == '[') {
+			return toString("LEFTSQUAREB", "[", lineNo, columnNo);
+		} else if (ch == ']') {
+			return toString("RIGHTSQUAREB", "]", lineNo, columnNo);
+		} else if (ch == '{') {
+			return toString("LEFTCURLYB", "{", lineNo, columnNo);
+		} else if (ch == '}') {
+			return toString("RIGHTCURLYB", "}", lineNo, columnNo);
+		}
+		else return "";
+	}
+	
 	public static boolean isNumber(String s) {
 		//boolean validNumber = true;
 		if (s.isEmpty())
@@ -420,9 +412,9 @@ public class lexicalAnalyzer {
 				c == 'A' || c == 'B' || c == 'C' || c == 'D' || c == 'E' || c == 'F';
 	}
 	
-	public static String toString(String token, int lineNo, int columnNo) {
+	public static String toString(String token, String literal, int lineNo, int columnNo) {
 		if (token.equals("LEXICAL ERROR")) {
-			System.out.println(token + " " + lineNo + ":" + columnNo);
+			System.out.println(token + " [" + lineNo + ":" + columnNo + "]: Invalid token '" + literal + "'");
 			System.exit(1);
 		}
 		System.out.println(token + " " + lineNo + ":" + columnNo);
