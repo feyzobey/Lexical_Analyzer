@@ -1,7 +1,14 @@
-(define (fibonacci n)
-  (let fib ([prev 0]
-            [cur 1]
-            [i 0])
-    (if (= i n)
-        cur
-        (fib cur (+ prev cur) (+ i 1)))))
+(define (sum a1 b~1)
+(+ a1 b1))
+(define myval (sum (sum -1.234E+9 +7.001e-2) .12))
+(define myval2 (+ +7.001e-2 -1.234E+9 2 -5 .12))
+(define str "I am A String With Digits17=8+9, 3:6/2 \"abc\" ****")
+(define !-abc "again an identifier called as !-abc")
+(define m ((lambda (y z)
+         (+ (- z y) (- z y)))
+3 -5))
+(define (<d-is-smaller d e)
+  (cond [(< d e) 1 ]
+        [else 0 ]))
+
+(define myval3 (+ +7.001e-2 -1.234E+9 2 -5 .12 +4 8E ))
