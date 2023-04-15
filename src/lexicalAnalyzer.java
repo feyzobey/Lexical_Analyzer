@@ -171,11 +171,8 @@ public class lexicalAnalyzer {
 					ch == '<' || ch == '=' || ch == '>' || ch == '?' || ch == '.' || ch == '+' || ch == '-')) {
 				token += ch;
 				tokenNumber += ch;
+				tempIdToken += ch;
 				// first char must not be a digit for ID token
-				if (!(tempIdToken.isEmpty() && isDecDigit(ch))) {
-					tempIdToken += ch;
-				}
-				
 			} else if (isKeyword(token)) {
 				tempIdToken = "";
 				tokenNumber = "";
@@ -219,7 +216,7 @@ public class lexicalAnalyzer {
 				else if(!tempIdToken.isEmpty()) {
 					tempIdToken = toString("LEXICAL ERROR", tempIdToken, lineNo, columnNo - tempIdToken.length(), write);
 				}
-				
+
 				// ascii 13 is carriage return, ascii 32 is space
 			} else if (ascii != 32 && ascii != 13) {
 				token = toString("LEXICAL ERROR", "", lineNo, columnNo, write);
