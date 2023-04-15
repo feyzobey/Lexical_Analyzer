@@ -34,6 +34,7 @@ public class lexicalAnalyzer {
 		String token = "";
 		String tempIdToken = "";
 		String tokenString = "";
+		String tokenNumber = "";
 		String tokenChar = "";
 
 		int ascii = 0;
@@ -144,15 +145,20 @@ public class lexicalAnalyzer {
 				}
 			}
 
-			// temporary initialising identifier's string
-			else if ((isLowerCaseCharacter(ch) || isDecDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
+			// temporary initialising keyword's, number's and identifier's strings
+			else if ((isLowerCaseCharacter(ch) || isDecDigit(ch) || isBinDigit(ch) || isHexDigit(ch) || ch == '!' || ch == '*' || ch == '/' || ch == ':' ||
 					ch == '<' || ch == '=' || ch == '>' || ch == '?' || ch == '.' || ch == '+' || ch == '-')) {
 				token += ch;
-				if (!(tempIdToken.isEmpty() && (isDecDigit(ch) || ch == '.' || ch == '+' || ch == '-'))) {
+				tokenNumber += ch;
+				// first char must not be a digit for ID token
+				if (!(tempIdToken.isEmpty() && isDecDigit(ch))) {
 					tempIdToken += ch;
 				}
+				
 			} else if (isKeyword(token)) {
 				tempIdToken = "";
+				tokenNumber = "";
+				tokenString = "";
 				if (token.equals("define")) {
 					token = toString("DEFINE", lineNo, columnNo - token.length());
 				} else if (token.equals("let")) {
@@ -166,7 +172,28 @@ public class lexicalAnalyzer {
 				} else if (token.equals("true") || token.equals("false")) {
 					token = toString("BOOLEAN", lineNo, columnNo - token.length());
 				}
+			} else if(isNumber(tokenNumber)) {
+				tempIdToken = "";
+				tokenString = "";
+				if (!tokenNumber.isEmpty()) {
+					tokenNumber = toString("NUMBER", lineNo, columnNo - tokenNumber.length());
+				}
+				// since this literal expression and brackets expression are in different if statements we might not print bracket after a number
+				if (ch == '(') {
+					token = toString("LEFTPAR", lineNo, columnNo);
+				} else if (ch == ')') {
+					token = toString("RIGHTPAR", lineNo, columnNo);
+				} else if (ch == '[') {
+					token = toString("LEFTSQUAREB", lineNo, columnNo);
+				} else if (ch == ']') {
+					token = toString("RIGHTSQUAREB", lineNo, columnNo);
+				} else if (ch == '{') {
+					token = toString("LEFTCURLYB", lineNo, columnNo);
+				} else if (ch == '}') {
+					token = toString("RIGHTCURLYB", lineNo, columnNo);
+				}
 			} else if (isIdentifier(tempIdToken)) {
+				tokenNumber = "";
 				if (!tempIdToken.isEmpty()) {
 					tempIdToken = toString("IDENTIFIER", lineNo, columnNo - tempIdToken.length());
 				}
@@ -200,6 +227,14 @@ public class lexicalAnalyzer {
 				} else if (ch == '}') {
 					token = toString("RIGHTCURLYB", lineNo, columnNo);
 				}
+			} else if(ch == ' ') {
+				if(!tokenNumber.isEmpty()) {
+					tokenNumber = toString("LEXICAL ERROR", lineNo, columnNo - tokenNumber.length());
+				}
+				else if(!tempIdToken.isEmpty()) {
+					tempIdToken = toString("LEXICAL ERROR", lineNo, columnNo - tempIdToken.length());
+				}
+				
 				// ascii 13 is carriage return, ascii 32 is space
 			} else if (ascii != 32 && ascii != 13) {
 				token = toString("LEXICAL ERROR", lineNo, columnNo);
@@ -233,11 +268,119 @@ public class lexicalAnalyzer {
 		return c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}';
 	}
 
+	public static boolean isNumber(String s) {
+		//boolean validNumber = true;
+		if (s.isEmpty())
+			return false;
+		if (s.length() == 1 && isDecDigit(s.charAt(0)))
+			return true;
+		// a check for hexadecimal and binary integer
+		if (s.charAt(0) == '0' && s.length() > 2) {
+			// check for hexadecimal literal
+			if (s.charAt(1) == 'x') {
+				if (isHexDigit(s.charAt(2))) {
+					for (int i = 3; i < s.length(); i++) {
+						if (!isHexDigit(s.charAt(i)))
+							return false;
+					}
+				}
+				else
+					return false;
+			}
+			// check for binary literal
+			else if (s.charAt(1) == 'b') {
+				if (isBinDigit(s.charAt(2))) {
+					for (int i = 3; i < s.length(); i++) {
+						if (!isBinDigit(s.charAt(i)))
+							return false;
+					}
+				}
+				else
+					return false;
+			}
+		}
+		// a check for decimal signed and floating point numbers with no points
+		else if ((s.charAt(0) == '+' || s.charAt(0) == '-' || isDecDigit(s.charAt(0))) && !s.contains(".")) {
+			int exp = 0;
+			for (int i = 1; i < s.length(); i++) {
+				if (!isDecDigit(s.charAt(i)) && (i != s.length() - 1)) {
+					exp = i;
+					break;
+				}
+				// it is a decimal integer
+				else if ((i == s.length() - 1) && isDecDigit(s.charAt(i)))
+					return true;
+			}
+			// floating number
+			if (s.charAt(exp) == 'e' || s.charAt(exp) == 'E') {
+				exp++;
+				if ((s.charAt(exp) == '+' || s.charAt(exp) == '-' || isDecDigit(s.charAt(exp)))) {
+					for (int i = exp + 1; i < s.length(); i++) {
+						if (!isDecDigit(s.charAt(i)))
+							return false;
+					}
+					return true;
+				}
+			}
+			else 
+				return false;
+		}
+		// check for floating point number with a point
+		else if ((s.charAt(0) == '+' || s.charAt(0) == '-' || isDecDigit(s.charAt(0)) || s.charAt(0) == '.') && s.contains(".")) {
+			int indexOfPoint = 0;
+			int exp = 0;
+			// check prefix
+			if (s.charAt(0) == '+' || s.charAt(0) == '-' || isDecDigit(s.charAt(0)) || s.charAt(0) == '.') {
+				if (s.charAt(0) == '.')
+					indexOfPoint = 0;
+				else { 
+					for (int i = 1; i < s.length(); i++) {
+						if (!isDecDigit(s.charAt(i))) {
+							indexOfPoint = i;
+							break;
+						}
+					}
+				}
+				if(s.charAt(indexOfPoint) == '.') {
+					if (!isDecDigit(s.charAt(++indexOfPoint))) {
+						return false;
+					}
+					for (int i = indexOfPoint; i < s.length(); i++) {
+						if (!isDecDigit(s.charAt(i)) && (i != s.length() - 1)) {
+							exp = i;
+							break;
+						}
+						else if ((i == s.length() - 1) && isDecDigit(s.charAt(i)))
+							return true;
+					}
+					// floating number
+					if (s.charAt(exp) == 'e' || s.charAt(exp) == 'E') {
+						exp++;
+						if ((s.charAt(exp) == '+' || s.charAt(exp) == '-' || isDecDigit(s.charAt(exp)))) {
+							for (int i = exp + 1; i < s.length(); i++) {
+								if (!isDecDigit(s.charAt(i)))
+									return false;
+							}
+							return true;
+						}
+					}
+					else 
+						return false;
+				}
+				else
+					return false;
+			}
+		}
+		return false;
+	}
+	
 	public static boolean isIdentifier(String s) {
 		boolean validChar = true;
 		if (!isKeyword(s) && !s.isEmpty()) {
 			// check first rightmost BNF choice
-			if (isLowerCaseCharacter(s.charAt(0)) || s.charAt(0) == '!' || s.charAt(0) == '*' || s.charAt(0) == '/'
+			if ((s.charAt(0) == '+' || s.charAt(0) == '-' || s.charAt(0) == '.') && s.length() == 1) 
+				return true;
+			else if (isLowerCaseCharacter(s.charAt(0)) || s.charAt(0) == '!' || s.charAt(0) == '*' || s.charAt(0) == '/'
 					|| s.charAt(0) == ':' ||
 					s.charAt(0) == '<' || s.charAt(0) == '=' || s.charAt(0) == '>' || s.charAt(0) == '?') {
 				// second rightmost BNF choice
@@ -264,11 +407,24 @@ public class lexicalAnalyzer {
 				s.equals("true") || s.equals("false");
 	}
 
+	public static boolean isBinDigit(char c) {
+		return c == '0' || c == '1';
+	}
+	
 	public static boolean isDecDigit(char c) {
 		return Character.isDigit(c);
 	}
 
+	public static boolean isHexDigit(char c) {
+		return Character.isDigit(c) || c == 'a' || c == 'b' || c == 'c' || c == 'd' || c == 'e' || c == 'f' ||
+				c == 'A' || c == 'B' || c == 'C' || c == 'D' || c == 'E' || c == 'F';
+	}
+	
 	public static String toString(String token, int lineNo, int columnNo) {
+		if (token.equals("LEXICAL ERROR")) {
+			System.out.println(token + " " + lineNo + ":" + columnNo);
+			System.exit(1);
+		}
 		System.out.println(token + " " + lineNo + ":" + columnNo);
 		return "";
 	}
