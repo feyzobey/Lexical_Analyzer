@@ -1,4 +1,4 @@
-(define (sum a1 b~1)
+(define (sum a1 b1)
 (+ a1 b1))
 (define myval (sum (sum -1.234E+9 +7.001e-2) .12))
 (define myval2 (+ +7.001e-2 -1.234E+9 2 -5 .12))
